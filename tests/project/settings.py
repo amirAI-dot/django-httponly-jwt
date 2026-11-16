@@ -18,7 +18,7 @@ INSTALLED_APPS = [
     'httponly_jwt',
 ]
 
-MIDDLEWARE: list[str] = []
+MIDDLEWARE = ['httponly_jwt.middleware.RenewalMiddleware']
 
 ROOT_URLCONF = 'tests.project.urls'
 

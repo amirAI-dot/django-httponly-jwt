@@ -1,15 +1,16 @@
 """
 What cannot work, refused when the project starts - ``manage.py check``.
 
+* ``httponly_jwt.E002`` - the cookie authenticates, and ``RenewalMiddleware``
+  is not installed: every session would end with its first access token;
 * ``httponly_jwt.E003`` - ``HTTPONLY_JWT`` is not a dictionary, has a key the
   library does not know, or a value it cannot use;
 * ``httponly_jwt.E004`` - simplejwt's ``token_blacklist`` is not installed:
   rotation and signing out could not end a token;
 * ``httponly_jwt.W001`` - the cookies are not ``Secure``, on ``check --deploy``.
 
-E001 (``SameSite=None`` with no CSRF check) comes with the CSRF mode, and
-E002 (the cookie read with no renewal) with the middleware: each check
-arrives with what it guards.
+E001 (``SameSite=None`` with no CSRF check) comes with the CSRF mode: each
+check arrives with what it guards.
 """
 
 from collections.abc import Mapping
@@ -18,10 +19,16 @@ from typing import Any
 from django.apps import apps
 from django.conf import settings
 from django.core.checks import CheckMessage, Error, Tags, Warning, register
+from django.utils.module_loading import import_string
 
 from httponly_jwt.conf import httponly_jwt_settings, problems_of
 
 BLACKLIST_APP = 'rest_framework_simplejwt.token_blacklist'
+COOKIE_READERS = (
+    'httponly_jwt.authentication.CookieAuthentication',
+    'httponly_jwt.authentication.OptionalAuthentication',
+)
+RENEWAL = 'httponly_jwt.middleware.RenewalMiddleware'
 
 
 @register(Tags.security)
@@ -70,3 +77,39 @@ def check_secure(app_configs: Any = None, **kwargs: Any) -> list[CheckMessage]:
             id='httponly_jwt.W001',
         )
     ]
+
+
+@register(Tags.security)
+def check_renewal(app_configs: Any = None, **kwargs: Any) -> list[CheckMessage]:
+    """E002: a session read from the cookie is renewed, or it ends within the hour."""
+    rest = getattr(settings, 'REST_FRAMEWORK', {}) or {}
+    reading = rest.get('DEFAULT_AUTHENTICATION_CLASSES', ())
+
+    if not any(_is(path, COOKIE_READERS) for path in reading):
+        return []
+
+    if any(_is(path, (RENEWAL,)) for path in getattr(settings, 'MIDDLEWARE', ())):
+        return []
+
+    return [
+        Error(
+            'The session is read from the cookie, and RenewalMiddleware is not in '
+            'MIDDLEWARE: every session would end with its first access token.',
+            hint=f'Add {RENEWAL!r} to MIDDLEWARE.',
+            id='httponly_jwt.E002',
+        )
+    ]
+
+
+def _is(path: str, wanted: tuple[str, ...]) -> bool:
+    """Whether the class at ``path`` is one of ``wanted``, or built on one."""
+    if path in wanted:
+        return True
+
+    try:
+        found = import_string(path)
+    except ImportError:
+        return False  # Django and DRF say so themselves
+
+    bases = {f'{base.__module__}.{base.__qualname__}' for base in getattr(found, '__mro__', ())}
+    return bool(bases & set(wanted))

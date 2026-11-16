@@ -175,9 +175,13 @@ It does **not** rotate the refresh token: two requests renewing together
 would blacklist each other's. Rotation is the refresh view's, which a client
 calls on purpose (section 8).
 
-Renewal costs one query - loading the person - once per access-token
-lifetime per session. Every other request costs a signature check and no
-query.
+A response that already sets or clears the session cookies - a view that
+signed somebody in or out - keeps them: the renewal never undoes what the
+view decided.
+
+Renewal costs two queries - whether the refresh token was blacklisted, and
+loading the person - once per access-token lifetime per session. Every other
+request costs a signature check and no query.
 
 The middleware works under WSGI and ASGI, as a sync and async middleware.
 

@@ -15,7 +15,9 @@ from django.core.checks import run_checks
 from django.core.exceptions import ImproperlyConfigured
 from django.test import override_settings
 
+from httponly_jwt.authentication import CookieAuthentication
 from httponly_jwt.conf import DEFAULTS, httponly_jwt_settings
+from httponly_jwt.middleware import RenewalMiddleware
 
 
 def ids(**settings: Any) -> list[str]:
@@ -114,3 +116,45 @@ def test_a_broken_setting_is_reported_once_not_by_every_check() -> None:
     assert ids(HTTPONLY_JWT={'COOKIE_SECURE': 'no'}, INSTALLED_APPS=without_blacklist()) == [
         'httponly_jwt.E003'
     ]
+
+
+COOKIE = 'httponly_jwt.authentication.CookieAuthentication'
+OPTIONAL = 'httponly_jwt.authentication.OptionalAuthentication'
+HEADER = 'httponly_jwt.authentication.HeaderAuthentication'
+RENEWAL = 'httponly_jwt.middleware.RenewalMiddleware'
+
+
+def reading(*classes: str) -> dict[str, list[str]]:
+    return {'DEFAULT_AUTHENTICATION_CLASSES': list(classes)}
+
+
+@pytest.mark.parametrize('reader', [COOKIE, OPTIONAL])
+def test_a_session_read_from_the_cookie_with_no_renewal_is_refused(reader: str) -> None:
+    """Every session would end with its first access token, an hour after signing in."""
+    assert ids(REST_FRAMEWORK=reading(reader), MIDDLEWARE=[]) == ['httponly_jwt.E002']
+    assert ids(REST_FRAMEWORK=reading(reader), MIDDLEWARE=[RENEWAL]) == []
+
+
+def test_a_project_reading_only_the_header_needs_no_renewal() -> None:
+    assert ids(REST_FRAMEWORK=reading(HEADER), MIDDLEWARE=[]) == []
+    assert ids(REST_FRAMEWORK={}, MIDDLEWARE=[]) == []
+
+
+def test_classes_built_on_the_librarys_are_recognised() -> None:
+    own_reader = f'{__name__}.OwnCookie'
+    own_renewal = f'{__name__}.OwnRenewal'
+
+    assert ids(REST_FRAMEWORK=reading(own_reader), MIDDLEWARE=[]) == ['httponly_jwt.E002']
+    assert ids(REST_FRAMEWORK=reading(own_reader), MIDDLEWARE=[own_renewal]) == []
+
+
+def test_a_class_that_cannot_be_imported_is_left_to_django_and_drf() -> None:
+    assert ids(REST_FRAMEWORK=reading('nowhere.Auth'), MIDDLEWARE=['nowhere.Middleware']) == []
+
+
+class OwnCookie(CookieAuthentication):
+    """A project's own class, built on the library's."""
+
+
+class OwnRenewal(RenewalMiddleware):
+    """A project's own middleware, built on the library's."""
