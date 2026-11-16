@@ -4,6 +4,21 @@
 
 ## Unreleased
 
+Renewal (stage 3):
+
+* **`RenewalMiddleware`** renews an expired access token on the way through,
+  and the request that found it expired is served. It renews when the browser
+  has already deleted the access cookie; asks whether the person may still be
+  signed in - `is_active`, and `USER_CAN_SIGN_IN`; never rotates the refresh
+  token, so two tabs renewing together both stay signed in; and leaves alone a
+  response that set or cleared the session itself. A session that is over -
+  expired, blacklisted, an account gone or switched off - is cleared. Sync and
+  async.
+* A good access token costs no query; a renewal costs two - the blacklist,
+  and the person.
+* **E002**: the cookie authenticates and `RenewalMiddleware` is not installed -
+  every session would end with its first access token.
+
 Authentication (stage 2):
 
 * **`CookieAuthentication`** - a browser is the person its access cookie
