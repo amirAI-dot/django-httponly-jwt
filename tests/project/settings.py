@@ -1,0 +1,25 @@
+"""
+The project the test suite runs against.
+
+The smallest project the library can be installed in: Django's ``auth`` and
+``contenttypes``, DRF, simplejwt with its blacklist, and the library. Each
+stage adds what it tests and nothing more.
+"""
+
+SECRET_KEY = 'only-for-the-test-suite-and-long-enough-for-hmac-sha256'
+USE_TZ = True
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+INSTALLED_APPS = [
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',
+    'httponly_jwt',
+]
+
+MIDDLEWARE: list[str] = []
+
+ROOT_URLCONF = 'tests.project.urls'
+
+DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': ':memory:'}}
