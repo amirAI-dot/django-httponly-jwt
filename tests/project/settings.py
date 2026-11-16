@@ -23,3 +23,12 @@ MIDDLEWARE: list[str] = []
 ROOT_URLCONF = 'tests.project.urls'
 
 DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': ':memory:'}}
+
+# The browser's way in first, then the header's - as a project lists them.
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'httponly_jwt.authentication.CookieAuthentication',
+        'httponly_jwt.authentication.HeaderAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.AllowAny'],
+}

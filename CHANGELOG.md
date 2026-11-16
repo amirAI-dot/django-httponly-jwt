@@ -4,6 +4,18 @@
 
 ## Unreleased
 
+Authentication (stage 2):
+
+* **`CookieAuthentication`** - a browser is the person its access cookie
+  names. A cookie that is expired, unreadable, a refresh token, or names an
+  account gone or switched off is nobody rather than an error: a page that
+  needs somebody answers 401, and a page open to anybody serves a guest.
+* **`HeaderAuthentication`** - `Authorization: Bearer` for apps and scripts; a
+  bad header is refused, since it was sent on purpose.
+* **`OptionalAuthentication`** - the cookie, then the header, and never a
+  refusal: for an endpoint anybody may call that does more for somebody
+  signed in.
+
 The skeleton, from the design (stage 1):
 
 * **The `HTTPONLY_JWT` setting**, read and checked: every key has a default,
