@@ -90,6 +90,8 @@ plugins:
             Guide: راهنما
             Reference: مرجع
             Python API: API پایتون
+            How-to guides: راهنماهای کاربردی
+            Questions: پرسش‌ها
             Explanation: توضیح‌ها
             Design: طراحی
             Project: پروژه
@@ -112,9 +114,20 @@ nav:
           - reference/api/signals.md
           - reference/api/cookies.md
           - reference/api/schema.md
+  - How-to guides:
+      - how-to/index.md
+      - how-to/nextjs.md
+      - how-to/from-local-storage.md
+      - how-to/audit-trail.md
+      - how-to/sign-out-everywhere.md
+      - how-to/testing.md
   - Explanation:
       - Design: design.md
+  - Questions: faq.md
   - Project:
+      - project/versions.md
+      - project/security.md
+      - project/contributing.md
       - Changelog: changelog.md
 
 markdown_extensions:

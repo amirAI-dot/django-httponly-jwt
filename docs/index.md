@@ -50,8 +50,10 @@ Then a sign-in view hands the person to `start_session` - see the
 | [Introduction](getting-started/introduction.md) | what goes wrong with tokens in the browser, and what this does about it |
 | [Quickstart](getting-started/quickstart.md) | a project signing people in, in five minutes |
 | [The guide](guide.md) | every part, from signing in to a frontend on another site |
+| [How-to guides](how-to/index.md) | Next.js, moving off `localStorage`, an audit trail, signing out everywhere, testing |
 | [Reference](reference/index.md) | settings, checks, signals, and the Python API |
 | [Design](design.md) | why it is built this way |
+| [Questions](faq.md) | is a cookie safer, why `Lax`, what it costs |
 
 Django 5.2 to 6.1, Python 3.11 to 3.14, over
 [djangorestframework-simplejwt](https://github.com/jazzband/djangorestframework-simplejwt).
