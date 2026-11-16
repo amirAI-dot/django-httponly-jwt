@@ -80,7 +80,7 @@ class SignIn(APIView):
 
     def post(self, request: Request) -> Response:
         person = User.objects.get(username=request.data['username'])
-        return start_session(Response({'id': person.pk}), person)
+        return start_session(Response({'id': person.pk}), person, request=request)
 
 
 class Claims(APIView):

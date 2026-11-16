@@ -108,7 +108,7 @@ from httponly_jwt.sessions import start_session
 class SignInView(APIView):
     def post(self, request):
         user = verify_code(request.data['phone'], request.data['code'])   # the project's
-        return start_session(Response({'id': user.pk}), user)
+        return start_session(Response({'id': user.pk}), user, request=request)
 ```
 
 ```python
@@ -275,6 +275,16 @@ HTTPONLY_JWT = {
 `session_started`، `session_renewed`، `session_refreshed` (چرخاندن)،
 `session_ended` (خارج شد، یا middleware تمامش کرد - با دلیل). برای سابقه‌ای که خود
 پروژه نگه می‌دارد.
+
+- `reason` یک `Ended` است: `signed_out`، `token_unusable` (منقضی، blacklist شده،
+  ناخوانا) یا `not_allowed` (حذف شده، غیرفعال، یا ردشده با `USER_CAN_SIGN_IN`).
+  وقتی توکن کسی را نام می‌برد که کتابخانه نتوانست بارش کند، `person` برابر `None` است.
+- تمدیدی که یک view کنارش گذاشت - خودش نشست را گذاشت یا پاک کرد - فرستاده نمی‌شود:
+  آنچه گفته می‌شود همان است که به پاسخ رسید.
+- زیر ASGI، middleware با `asend` می‌فرستد، پس گیرنده‌ای که یک سطر سابقه می‌نویسد
+  جایی اجرا می‌شود که اجازه دارد.
+- `start_session` و `issue_tokens` درخواست را با `request=` می‌گیرند، تا آن را
+  برسانند.
 
 ## ۱۲. تنظیمات
 

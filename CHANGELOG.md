@@ -4,6 +4,22 @@
 
 ## Unreleased
 
+Around it (stage 6):
+
+* **Signals** - `session_started`, `session_renewed`, `session_refreshed` and
+  `session_ended`, each with the person and the request, for a project's audit
+  trail. `session_ended` carries `reason`, an `Ended`: `signed_out`,
+  `token_unusable` or `not_allowed`. A renewal a view overruled is not sent.
+  Under ASGI the middleware sends with `asend`. `start_session` and
+  `issue_tokens` take `request=` to pass it on.
+* **drf-spectacular**, with the `spectacular` extra: the cookie is an
+  `apiKey` scheme under the name the project chose, the header simplejwt's
+  `jwtAuth`, the optional class either of them; the refresh, sign-out and
+  CSRF-token views say what they read and answer. Loaded only when
+  drf-spectacular is installed, and described without a warning.
+* **Persian** - the catalogue in `httponly_jwt/locale/fa`, compiled and
+  shipped; `nox -s messages` fails when a marked string is missing from it.
+
 CSRF (stage 5):
 
 * **`CSRF = True`**, for a frontend on another site with `SameSite=None`: an

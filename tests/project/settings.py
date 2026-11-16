@@ -31,4 +31,5 @@ REST_FRAMEWORK = {
         'httponly_jwt.authentication.HeaderAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.AllowAny'],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
