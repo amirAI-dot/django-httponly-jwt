@@ -2,7 +2,7 @@
 
 from django.urls import path
 
-from httponly_jwt.views import RefreshView, SignOutView
+from httponly_jwt.views import CsrfTokenView, RefreshView, SignOutView
 from tests.project import views
 
 urlpatterns = [
@@ -15,4 +15,6 @@ urlpatterns = [
     path('claims/', views.Claims.as_view()),
     path('auth/refresh/', RefreshView.as_view()),
     path('auth/sign-out/', SignOutView.as_view()),
+    path('auth/csrf/', CsrfTokenView.as_view()),
+    path('writes/', views.SignedInWrites.as_view()),
 ]

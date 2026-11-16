@@ -24,6 +24,15 @@ class SignedIn(APIView):
         return who(request)
 
 
+class SignedInWrites(APIView):
+    """A write somebody signed in makes - the request another site would forge."""
+
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request: Request) -> Response:
+        return who(request)
+
+
 class Anybody(APIView):
     """Anybody - with the project's default authentication."""
 
@@ -40,6 +49,9 @@ class AnybodyMoreIfSignedIn(APIView):
     permission_classes = (AllowAny,)
 
     def get(self, request: Request) -> Response:
+        return who(request)
+
+    def post(self, request: Request) -> Response:
         return who(request)
 
 

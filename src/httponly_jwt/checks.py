@@ -1,16 +1,19 @@
 """
 What cannot work, refused when the project starts - ``manage.py check``.
 
+* ``httponly_jwt.E001`` - the cookies are ``SameSite=None`` and the CSRF check
+  is off: any site could act with the person's session;
 * ``httponly_jwt.E002`` - the cookie authenticates, and ``RenewalMiddleware``
   is not installed: every session would end with its first access token;
 * ``httponly_jwt.E003`` - ``HTTPONLY_JWT`` is not a dictionary, has a key the
   library does not know, or a value it cannot use;
 * ``httponly_jwt.E004`` - simplejwt's ``token_blacklist`` is not installed:
   rotation and signing out could not end a token;
-* ``httponly_jwt.W001`` - the cookies are not ``Secure``, on ``check --deploy``.
-
-E001 (``SameSite=None`` with no CSRF check) comes with the CSRF mode: each
-check arrives with what it guards.
+* ``httponly_jwt.E005`` - the cookies are ``SameSite=None`` and not
+  ``Secure``: browsers refuse such a cookie, and nobody could sign in;
+* ``httponly_jwt.W001`` - the cookies are not ``Secure``, on ``check --deploy``;
+* ``httponly_jwt.W002`` - the CSRF check is on for a frontend on another site,
+  and Django's CSRF settings would refuse that frontend's every write.
 """
 
 from collections.abc import Mapping
@@ -113,3 +116,72 @@ def _is(path: str, wanted: tuple[str, ...]) -> bool:
 
     bases = {f'{base.__module__}.{base.__qualname__}' for base in getattr(found, '__mro__', ())}
     return bool(bases & set(wanted))
+
+
+@register(Tags.security)
+def check_cross_site(app_configs: Any = None, **kwargs: Any) -> list[CheckMessage]:
+    """E001 and E005: a cookie every site's requests carry needs a CSRF check, and HTTPS."""
+    if check_settings() or httponly_jwt_settings.cookie_samesite != 'None':
+        return []
+
+    found: list[CheckMessage] = []
+
+    if not httponly_jwt_settings.csrf:
+        found.append(
+            Error(
+                "HTTPONLY_JWT['COOKIE_SAMESITE'] is 'None' and ['CSRF'] is off: the browser "
+                'would attach the session to a request any site causes, and nothing would '
+                "tell it from the person's own.",
+                hint=(
+                    "Set HTTPONLY_JWT['CSRF'] to True, or keep COOKIE_SAMESITE 'Lax' when "
+                    'the frontend and the API share a site.'
+                ),
+                id='httponly_jwt.E001',
+            )
+        )
+
+    if not httponly_jwt_settings.cookie_secure:
+        found.append(
+            Error(
+                "HTTPONLY_JWT['COOKIE_SAMESITE'] is 'None' and ['COOKIE_SECURE'] is off: "
+                'browsers refuse such a cookie, so nobody could stay signed in.',
+                hint="Set HTTPONLY_JWT['COOKIE_SECURE'] to True and serve the API over HTTPS.",
+                id='httponly_jwt.E005',
+            )
+        )
+
+    return found
+
+
+@register(Tags.security)
+def check_csrf_settings(app_configs: Any = None, **kwargs: Any) -> list[CheckMessage]:
+    """W002: Django's CSRF settings let a frontend on another site write at all."""
+    if check_settings():
+        return []
+
+    if not httponly_jwt_settings.csrf or httponly_jwt_settings.cookie_samesite != 'None':
+        return []
+
+    wrong = []
+
+    if getattr(settings, 'CSRF_COOKIE_SAMESITE', 'Lax') != 'None':
+        wrong.append("CSRF_COOKIE_SAMESITE is not 'None', so the CSRF cookie never reaches it")
+    if not getattr(settings, 'CSRF_COOKIE_SECURE', False):
+        wrong.append('CSRF_COOKIE_SECURE is off, so browsers refuse the CSRF cookie')
+    if not getattr(settings, 'CSRF_TRUSTED_ORIGINS', []):
+        wrong.append('CSRF_TRUSTED_ORIGINS is empty, so its origin is refused')
+
+    if not wrong:
+        return []
+
+    return [
+        Warning(
+            'The CSRF check is on for a frontend on another site, and every write it '
+            f'makes would be refused: {"; ".join(wrong)}.',
+            hint=(
+                "Set CSRF_COOKIE_SAMESITE = 'None', CSRF_COOKIE_SECURE = True, and list "
+                "the frontend's origin in CSRF_TRUSTED_ORIGINS."
+            ),
+            id='httponly_jwt.W002',
+        )
+    ]
