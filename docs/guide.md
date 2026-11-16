@@ -4,7 +4,7 @@
 
 Everything django-httponly-jwt does, and how a project uses it. Why it is
 built this way is in the [design](design.md); a project with all of it in
-place is in [`example/`](../example/).
+place is in [`example/`](https://github.com/amirAI-dot/django-httponly-jwt/tree/main/example).
 
 ## 1. What it is for
 

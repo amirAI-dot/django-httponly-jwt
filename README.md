@@ -8,10 +8,11 @@ that the frontend never holds a token.
 [![Django](https://img.shields.io/pypi/frameworkversions/django/django-httponly-jwt)](https://pypi.org/project/django-httponly-jwt/)
 [![CI](https://github.com/amirAI-dot/django-httponly-jwt/actions/workflows/ci.yml/badge.svg)](https://github.com/amirAI-dot/django-httponly-jwt/actions/workflows/ci.yml)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](https://github.com/amirAI-dot/django-httponly-jwt/blob/main/pyproject.toml)
+[![Docs](https://img.shields.io/badge/docs-English%20%7C%20%D9%81%D8%A7%D8%B1%D8%B3%DB%8C-blue)](https://amirai-dot.github.io/django-httponly-jwt/)
 [![Licence](https://img.shields.io/pypi/l/django-httponly-jwt)](https://github.com/amirAI-dot/django-httponly-jwt/blob/main/LICENSE)
 
 [فارسی](https://github.com/amirAI-dot/django-httponly-jwt/blob/main/README.fa.md) ·
-[Guide](https://github.com/amirAI-dot/django-httponly-jwt/blob/main/docs/guide.md) ·
+[Documentation](https://amirai-dot.github.io/django-httponly-jwt/) ·
 [Design](https://github.com/amirAI-dot/django-httponly-jwt/blob/main/docs/design.md) ·
 [Example](https://github.com/amirAI-dot/django-httponly-jwt/blob/main/example/README.md)
 
@@ -92,7 +93,7 @@ const answer = await fetch('https://api.example.com/me/', { credentials: 'includ
 
 That is all of it: from there every request from the browser carries the
 cookies, the middleware renews the access token when it runs out, and
-`request.user` is the person. The [guide](https://github.com/amirAI-dot/django-httponly-jwt/blob/main/docs/guide.md) has the rest -
+`request.user` is the person. The [documentation](https://amirai-dot.github.io/django-httponly-jwt/) has the rest -
 lifetimes and claims, the frontend, a frontend on another site, apps,
 signals, the schema, every setting and every check - and
 [`example/`](https://github.com/amirAI-dot/django-httponly-jwt/blob/main/example/README.md) has all of it running.
@@ -125,7 +126,8 @@ nox -s tests
 combination is `nox -s "tests(3.13-django6.1)"`, and `nox -l` lists them all.
 `package` builds the wheel and runs the suite and the example against it. `messages` extracts
 the marked strings again and fails if the Persian catalogue is missing one; it
-needs gettext.
+needs gettext. `docs` builds the documentation site and fails on any link it
+cannot follow; `nox -s docs -- serve` shows it while it is written.
 
 ## Licence
 

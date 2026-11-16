@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        session: [lint, types, messages, package]
+        session: [lint, types, messages, package, docs]
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7

@@ -4,7 +4,7 @@
 
 هر کاری که django-httponly-jwt می‌کند، و اینکه یک پروژه چطور از آن استفاده می‌کند.
 اینکه چرا این‌طور ساخته شده در [طراحی](design.fa.md) آمده؛ پروژه‌ای که همه‌اش سر جایش
-است در [`example/`](../example/) است.
+است در [`example/`](https://github.com/amirAI-dot/django-httponly-jwt/tree/main/example) است.
 
 ## ۱. برای چیست
 

@@ -2,17 +2,25 @@
 
 [English](CHANGELOG.md)
 
+## منتشرنشده
+
+* **سایت مستندات**، به انگلیسی و فارسی:
+  [amirai-dot.github.io/django-httponly-jwt](https://amirai-dot.github.io/django-httponly-jwt/fa/) -
+  معرفی، نصب، شروع سریع، راهنما، API پایتون که از خود کد خوانده می‌شود، طراحی و همین
+  فهرست تغییرات. `nox -s docs` آن را در CI می‌سازد و با هر لینکی که نتواند دنبالش کند
+  شکست می‌خورد.
+
 ## 0.1.0 - اولین انتشار
 
 نشست‌های JWT در کوکی‌های HttpOnly، که سرور سر راه تمدیدشان می‌کند: همه‌ی آنچه در
-[طراحی](docs/design.fa.md) آمده، مرحله به مرحله ساخته شده.
+[طراحی](https://github.com/amirAI-dot/django-httponly-jwt/blob/main/docs/design.fa.md) آمده، مرحله به مرحله ساخته شده.
 
 انتشار (مرحله‌ی ۷):
 
-* **راهنما** ([`docs/guide.fa.md`](docs/guide.fa.md)، و به انگلیسی) - همه‌ی بخش‌ها،
+* **راهنما** ([`docs/guide.fa.md`](https://github.com/amirAI-dot/django-httponly-jwt/blob/main/docs/guide.fa.md)، و به انگلیسی) - همه‌ی بخش‌ها،
   از راه‌اندازی تا فرانت‌اند، فرانت‌اند روی سایت دیگر، اپ‌ها، سیگنال‌ها، schema، همه‌ی
   تنظیمات و همه‌ی بررسی‌ها.
-* **یک پروژه‌ی نمونه** ([`example/`](example/README.fa.md)) - ورود با کد یک‌بارمصرف،
+* **یک پروژه‌ی نمونه** ([`example/`](https://github.com/amirAI-dot/django-httponly-jwt/tree/main/example)) - ورود با کد یک‌بارمصرف،
   نشست هر نفر، سابقه‌ای از روی سیگنال‌ها؛ تست‌هایش در `nox -s package` روی wheel
   ساخته‌شده اجرا می‌شوند.
 * از یک release در GitHub، با Trusted Publishing، روی PyPI منتشر می‌شود.

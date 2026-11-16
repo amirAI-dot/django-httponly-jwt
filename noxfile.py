@@ -8,6 +8,7 @@ Every check the project runs, defined once - locally and in CI alike.
     nox -s "tests(3.13-django6.1)"           one combination
     nox -s package                           the wheel installs; the suite and example run on it
     nox -s messages                          the Persian catalogue holds every marked string
+    nox -s docs                              the documentation site builds, every link found
 
 CI runs these same sessions, built from the same table, so a check that
 passes here passes there and a supported version cannot be left out of one.
@@ -103,6 +104,22 @@ def messages(session: nox.Session) -> None:
         '*.po',
         external=True,
     )
+
+
+@nox.session(python=NEWEST_PYTHON)
+def docs(session: nox.Session) -> None:
+    """
+    The documentation site builds with no warning - a link, an anchor or a
+    page it cannot find fails it. ``nox -s docs -- serve`` shows it at
+    http://127.0.0.1:8000 while it is written.
+    """
+    session.install('--group', 'docs')
+    session.env['NO_MKDOCS_2_WARNING'] = '1'
+
+    if session.posargs[:1] == ['serve']:
+        session.run('mkdocs', 'serve', *session.posargs[1:])
+    else:
+        session.run('mkdocs', 'build', '--strict', *session.posargs)
 
 
 @nox.session(python=NEWEST_PYTHON)
