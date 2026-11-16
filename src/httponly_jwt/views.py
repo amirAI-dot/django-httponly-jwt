@@ -28,13 +28,22 @@ is signed out either way, and an error would only tell them their sign-out
 failed when it had not.
 
 Neither takes authentication: the refresh token is the credential, and a
-sign-out must work when the access token has already run out.
+sign-out must work when the access token has already run out. With
+``CSRF = True`` both ask for the CSRF token when the refresh token came in the
+cookie, since that is the cookie another site's request would carry.
+
+``CsrfTokenView`` hands that token to a frontend on another site::
+
+    path('auth/csrf/', CsrfTokenView.as_view()),
 """
 
 import logging
 from typing import Any
 
+from django.middleware.csrf import get_token
+from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
+from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
@@ -45,6 +54,7 @@ from rest_framework_simplejwt.settings import api_settings as simplejwt
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from httponly_jwt.cookies import clear_session_cookies, read_refresh_token, set_session_cookies
+from httponly_jwt.csrf import enforce_csrf
 from httponly_jwt.sessions import issue_tokens, may_sign_in, person_of
 
 logger = logging.getLogger(__name__)
@@ -58,6 +68,10 @@ class RefreshView(APIView):
 
     def post(self, request: Request) -> Response:
         raw, from_cookie = presented(request)
+
+        if from_cookie:
+            enforce_csrf(request)
+
         refresh = readable(raw)
         person = None if refresh is None else person_of(refresh)
 
@@ -93,7 +107,11 @@ class SignOutView(APIView):
     permission_classes = (AllowAny,)
 
     def post(self, request: Request) -> Response:
-        raw, _from_cookie = presented(request)
+        raw, from_cookie = presented(request)
+
+        if from_cookie:
+            enforce_csrf(request)
+
         refresh = readable(raw)
 
         if refresh is not None:
@@ -103,6 +121,22 @@ class SignOutView(APIView):
             )
 
         return clear_session_cookies(Response(status=status.HTTP_204_NO_CONTENT))
+
+
+@method_decorator(ensure_csrf_cookie, name='dispatch')
+class CsrfTokenView(APIView):
+    """
+    ``GET``: the CSRF token, for a frontend on another site, which cannot read the API's cookie.
+
+    Only needed with ``CSRF = True``. The answer is ``{"csrf_token": "..."}``,
+    and the CSRF cookie it belongs with is set on the same response.
+    """
+
+    authentication_classes = ()
+    permission_classes = (AllowAny,)
+
+    def get(self, request: Request) -> Response:
+        return Response({'csrf_token': get_token(request)})
 
 
 def presented(request: Request) -> tuple[str, bool]:

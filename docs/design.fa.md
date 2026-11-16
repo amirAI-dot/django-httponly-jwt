@@ -246,6 +246,17 @@ HTTPONLY_JWT = {
    `CSRF = True` باعث می‌شود `CookieAuthentication` روی متدهای ناامن توکن CSRF خود
    Django را بخواهد، همان‌طور که `SessionAuthentication` در DRF می‌خواهد.
 
+وقتی بررسی روشن است:
+
+- توکن در `X-CSRFToken` می‌آید، و `CsrfTokenView` (`GET`) آن را به فرانت‌اند می‌دهد،
+  چون صفحه‌ای روی سایت دیگر نمی‌تواند کوکی API را بخواند؛
+- فقط درخواستی که کوکی احراز هویتش می‌کند پرسیده می‌شود - سایت دیگر نمی‌تواند هدر را
+  جعل کند، و کوکی کهنه یعنی «هیچ کس»؛
+- `RefreshView` و `SignOutView` هم می‌پرسند، وقتی توکن refresh در کوکی آمده، پس سایت
+  دیگر نه می‌تواند نشست را بچرخاند و نه تمامش کند؛
+- `OptionalAuthentication` نوشتنی با کوکی و بدون توکن را مثل درخواست یک مهمان جواب
+  می‌دهد: نه رد می‌کند، نه اختیار شخص را قرض می‌دهد.
+
 بررسی‌ها ترکیبی را که از هیچ چیزی محافظت نمی‌کند ناممکن می‌کنند:
 
 | شناسه | کی | سطح |
@@ -254,7 +265,9 @@ HTTPONLY_JWT = {
 | `httponly_jwt.E002` | `CookieAuthentication` به کار رفته و `RenewalMiddleware` نصب نیست - نشست‌ها با اولین توکن access تمام می‌شدند | خطا |
 | `httponly_jwt.E003` | تنظیمی که کتابخانه نمی‌شناسد، یا مقداری که نمی‌تواند به کار ببرد | خطا |
 | `httponly_jwt.E004` | `token_blacklist` نصب نیست - چرخاندن و خروج نمی‌توانستند توکنی را تمام کنند | خطا، مگر `ALLOW_WITHOUT_BLACKLIST` |
+| `httponly_jwt.E005` | `COOKIE_SAMESITE` برابر `None` است و `COOKIE_SECURE` خاموش - مرورگرها چنین کوکی‌ای را نمی‌پذیرند | خطا |
 | `httponly_jwt.W001` | `COOKIE_SECURE` خاموش است (`check --deploy`) | هشدار |
+| `httponly_jwt.W002` | بررسی CSRF با `SameSite=None` روشن است، و `CSRF_COOKIE_SAMESITE`، `CSRF_COOKIE_SECURE` یا `CSRF_TRUSTED_ORIGINS` هر نوشتن فرانت‌اند را رد می‌کردند | هشدار |
 
 ## ۱۱. سیگنال‌ها
 
@@ -327,7 +340,7 @@ Publishing.
 | ۲ | احراز هویت | سه کلاس |
 | ۳ | تمدید | middleware، sync و async |
 | ۴ | نشست‌ها | `start_session`، `issue_tokens`، viewهای تمدید و خروج، طول عمرها و claimها |
-| ۵ | CSRF | حالت CSRF، و E001 |
+| ۵ | CSRF | حالت CSRF، `CsrfTokenView`، و E001، E005 و W002 |
 | ۶ | پیرامون | سیگنال‌ها، drf-spectacular، فارسی |
 | ۷ | انتشار | مستندات، یک پروژه‌ی نمونه، 0.1.0 در PyPI |
 | ۸ | به کارگیری | DayarDarman، Elin و Idehsaz روی کتابخانه |

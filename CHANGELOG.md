@@ -4,6 +4,22 @@
 
 ## Unreleased
 
+CSRF (stage 5):
+
+* **`CSRF = True`**, for a frontend on another site with `SameSite=None`: an
+  unsafe request the cookie authenticates must carry Django's CSRF token in
+  `X-CSRFToken`, or it is refused with 403. A header-signed request is not
+  asked, and a stale cookie is still nobody. `RefreshView` and `SignOutView`
+  ask when the refresh token came in the cookie, so another site can neither
+  rotate a session nor end it. `OptionalAuthentication` serves a cookie write
+  without the token as a guest's.
+* **`CsrfTokenView`** hands the token to a frontend that cannot read the API's
+  cookie.
+* **E001**: `SameSite=None` with the check off - any site could act with the
+  session. **E005**: `SameSite=None` without `Secure` - browsers refuse the
+  cookie. **W002**: the check is on, and Django's `CSRF_COOKIE_SAMESITE`,
+  `CSRF_COOKIE_SECURE` or `CSRF_TRUSTED_ORIGINS` would refuse every write.
+
 Sessions (stage 4):
 
 * **`start_session(response, person)`** signs in a person the project has

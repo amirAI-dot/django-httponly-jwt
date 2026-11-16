@@ -259,6 +259,17 @@ another site caused. Two things can stop that:
    Django's CSRF token on unsafe methods, as DRF's `SessionAuthentication`
    does.
 
+With the check on:
+
+- the token travels in `X-CSRFToken`, and `CsrfTokenView` (`GET`) hands it to
+  the frontend, since a page on another site cannot read the API's cookie;
+- only a request the cookie authenticates is asked - a header cannot be
+  forged by another site, and a stale cookie is nobody;
+- `RefreshView` and `SignOutView` ask too, when the refresh token came in the
+  cookie, so another site can neither rotate the session nor end it;
+- `OptionalAuthentication` serves a cookie write without the token as a
+  guest's, never refusing and never lending the person's authority.
+
 The checks make the combination that protects nothing impossible:
 
 | id | when | level |
@@ -267,7 +278,9 @@ The checks make the combination that protects nothing impossible:
 | `httponly_jwt.E002` | `CookieAuthentication` is used and `RenewalMiddleware` is not installed - sessions would end with their first access token | error |
 | `httponly_jwt.E003` | a setting the library does not know, or a value it cannot use | error |
 | `httponly_jwt.E004` | `token_blacklist` is not installed - rotation and sign-out could not end a token | error, unless `ALLOW_WITHOUT_BLACKLIST` |
+| `httponly_jwt.E005` | `COOKIE_SAMESITE` is `None` and `COOKIE_SECURE` is off - browsers refuse such a cookie | error |
 | `httponly_jwt.W001` | `COOKIE_SECURE` is off (`check --deploy`) | warning |
+| `httponly_jwt.W002` | the CSRF check is on with `SameSite=None`, and `CSRF_COOKIE_SAMESITE`, `CSRF_COOKIE_SECURE` or `CSRF_TRUSTED_ORIGINS` would refuse the frontend's every write | warning |
 
 ## 11. Signals
 
@@ -342,7 +355,7 @@ pull request, released from a tag by Trusted Publishing.
 | 2 | authentication | the three classes |
 | 3 | renewal | the middleware, sync and async |
 | 4 | sessions | `start_session`, `issue_tokens`, the refresh and sign-out views, lifetimes and claims |
-| 5 | CSRF | the CSRF mode, and E001 |
+| 5 | CSRF | the CSRF mode, `CsrfTokenView`, E001, E005 and W002 |
 | 6 | around it | signals, drf-spectacular, Persian |
 | 7 | release | documentation, an example project, 0.1.0 on PyPI |
 | 8 | adoption | DayarDarman, Elin and Idehsaz on the library |

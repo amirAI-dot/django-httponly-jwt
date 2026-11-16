@@ -96,6 +96,10 @@ class HttpOnlyJWTSettings:
         return bool(self.value('COOKIE_SECURE'))
 
     @property
+    def csrf(self) -> bool:
+        return bool(self.value('CSRF'))
+
+    @property
     def allow_without_blacklist(self) -> bool:
         return bool(self.value('ALLOW_WITHOUT_BLACKLIST'))
 

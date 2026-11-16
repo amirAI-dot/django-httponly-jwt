@@ -158,3 +158,70 @@ class OwnCookie(CookieAuthentication):
 
 class OwnRenewal(RenewalMiddleware):
     """A project's own middleware, built on the library's."""
+
+
+# ---------------------------------------------------------------- a frontend on another site
+
+CROSS_SITE_CSRF = {
+    'CSRF_COOKIE_SAMESITE': 'None',
+    'CSRF_COOKIE_SECURE': True,
+    'CSRF_TRUSTED_ORIGINS': ['https://app.example.org'],
+}
+
+
+def test_a_cookie_every_site_s_requests_carry_needs_the_csrf_check() -> None:
+    """The one combination that protects nothing."""
+    assert ids(HTTPONLY_JWT={'COOKIE_SAMESITE': 'None'}) == ['httponly_jwt.E001']
+
+
+def test_a_cross_site_cookie_with_the_check_and_django_s_settings_is_accepted() -> None:
+    assert ids(HTTPONLY_JWT={'COOKIE_SAMESITE': 'None', 'CSRF': True}, **CROSS_SITE_CSRF) == []
+
+
+@pytest.mark.parametrize('samesite', ['Lax', 'Strict'])
+def test_a_same_site_cookie_needs_no_check_and_may_have_one(samesite: str) -> None:
+    assert ids(HTTPONLY_JWT={'COOKIE_SAMESITE': samesite}) == []
+    assert ids(HTTPONLY_JWT={'COOKIE_SAMESITE': samesite, 'CSRF': True}) == []
+
+
+def test_a_cross_site_cookie_that_is_not_secure_is_refused() -> None:
+    """Browsers drop SameSite=None without Secure: nobody could stay signed in."""
+    setting = {'COOKIE_SAMESITE': 'None', 'CSRF': True, 'COOKIE_SECURE': False}
+
+    assert ids(HTTPONLY_JWT=setting, **CROSS_SITE_CSRF) == [
+        'httponly_jwt.E005',
+        'httponly_jwt.W001',
+    ]
+
+
+def test_both_are_said_when_both_are_wrong() -> None:
+    setting = {'COOKIE_SAMESITE': 'None', 'COOKIE_SECURE': False}
+
+    assert ids(HTTPONLY_JWT=setting) == [
+        'httponly_jwt.E001',
+        'httponly_jwt.E005',
+        'httponly_jwt.W001',
+    ]
+
+
+@pytest.mark.parametrize(
+    ('setting', 'said'),
+    [
+        ('CSRF_COOKIE_SAMESITE', 'Lax'),
+        ('CSRF_COOKIE_SECURE', False),
+        ('CSRF_TRUSTED_ORIGINS', []),
+    ],
+)
+def test_django_s_csrf_settings_that_would_refuse_every_write_are_named(
+    setting: str, said: Any
+) -> None:
+    django = {**CROSS_SITE_CSRF, setting: said}
+    with override_settings(HTTPONLY_JWT={'COOKIE_SAMESITE': 'None', 'CSRF': True}, **django):
+        messages = [m for m in run_checks() if m.id == 'httponly_jwt.W002']
+
+    assert len(messages) == 1
+    assert setting in messages[0].msg
+
+
+def test_a_broken_setting_is_not_also_reported_as_cross_site() -> None:
+    assert ids(HTTPONLY_JWT={'COOKIE_SAMESITE': 'None', 'CSRF': 'yes'}) == ['httponly_jwt.E003']

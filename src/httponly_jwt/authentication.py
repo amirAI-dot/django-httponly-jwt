@@ -21,9 +21,13 @@ on to the next class, and an endpoint that needs somebody answers a plain
 is set on purpose, so a bad one is an error, as simplejwt has it: the client
 is told its token is not good rather than being treated as a guest.
 
+**With ``CSRF = True``** an unsafe request the cookie authenticates must carry
+Django's CSRF token, or it is refused with 403 - see ``httponly_jwt.csrf``.
+
 **Optional authentication** is for an endpoint anybody may call that does more
 for somebody signed in. The cookie, then the header - and never a refusal: a
-guest is not turned away for a stale token they did not mean to send.
+guest is not turned away for a stale token they did not mean to send, and a
+cookie write without its CSRF token is served as a guest's.
 
 Each is simplejwt's ``JWTAuthentication`` underneath, so its settings -
 ``AUTH_TOKEN_CLASSES``, ``USER_ID_CLAIM``, ``CHECK_USER_IS_ACTIVE`` - hold as
@@ -32,12 +36,13 @@ they always have.
 
 from typing import Any
 
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 from rest_framework.request import Request
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
 from httponly_jwt.cookies import read_access_token
+from httponly_jwt.csrf import enforce_csrf
 
 #: What a token or its account can be wrong with - each one, from a cookie, is nobody.
 _NOT_A_SESSION = (AuthenticationFailed, InvalidToken, TokenError)
@@ -54,11 +59,16 @@ class CookieAuthentication(JWTAuthentication):
 
         try:
             token = self.get_validated_token(raw.encode())
-            return self.get_user(token), token
+            person = self.get_user(token)
         except _NOT_A_SESSION:
             # Expired, unreadable, or an account gone or switched off: an
             # ordinary state for a cookie, not something to refuse a page for.
             return None
+
+        # Only once the cookie names somebody: a stale cookie is nobody, and
+        # nobody's request carries no authority to forge.
+        enforce_csrf(request)
+        return person, token
 
 
 class HeaderAuthentication(JWTAuthentication):
@@ -75,7 +85,12 @@ class OptionalAuthentication(JWTAuthentication):
     """The cookie, then the header - and nobody, rather than a refusal."""
 
     def authenticate(self, request: Request) -> tuple[Any, Any] | None:
-        found = CookieAuthentication().authenticate(request)
+        try:
+            found = CookieAuthentication().authenticate(request)
+        except PermissionDenied:
+            # A write with the cookie and no CSRF token - perhaps another
+            # site's. Served as a guest's, never with the person's authority.
+            found = None
 
         if found is not None:
             return found
