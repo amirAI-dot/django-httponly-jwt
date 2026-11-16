@@ -8,10 +8,11 @@
 [![Django](https://img.shields.io/pypi/frameworkversions/django/django-httponly-jwt)](https://pypi.org/project/django-httponly-jwt/)
 [![CI](https://github.com/amirAI-dot/django-httponly-jwt/actions/workflows/ci.yml/badge.svg)](https://github.com/amirAI-dot/django-httponly-jwt/actions/workflows/ci.yml)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](https://github.com/amirAI-dot/django-httponly-jwt/blob/main/pyproject.toml)
+[![Docs](https://img.shields.io/badge/docs-English%20%7C%20%D9%81%D8%A7%D8%B1%D8%B3%DB%8C-blue)](https://amirai-dot.github.io/django-httponly-jwt/)
 [![Licence](https://img.shields.io/pypi/l/django-httponly-jwt)](https://github.com/amirAI-dot/django-httponly-jwt/blob/main/LICENSE)
 
 [English](https://github.com/amirAI-dot/django-httponly-jwt/blob/main/README.md) ·
-[راهنما](https://github.com/amirAI-dot/django-httponly-jwt/blob/main/docs/guide.fa.md) ·
+[مستندات](https://amirai-dot.github.io/django-httponly-jwt/fa/) ·
 [طراحی](https://github.com/amirAI-dot/django-httponly-jwt/blob/main/docs/design.fa.md) ·
 [نمونه](https://github.com/amirAI-dot/django-httponly-jwt/blob/main/example/README.fa.md)
 
@@ -91,7 +92,7 @@ const answer = await fetch('https://api.example.com/me/', { credentials: 'includ
 
 همه‌اش همین است: از آنجا هر درخواست مرورگر کوکی‌ها را دارد، middleware توکن access را
 وقتی تمام شد تمدید می‌کند، و `request.user` همان شخص است. بقیه در
-[راهنما](https://github.com/amirAI-dot/django-httponly-jwt/blob/main/docs/guide.fa.md) است - طول نشست و claimها، فرانت‌اند، فرانت‌اند روی
+[مستندات](https://amirai-dot.github.io/django-httponly-jwt/fa/) است - طول نشست و claimها، فرانت‌اند، فرانت‌اند روی
 سایت دیگر، اپ‌ها، سیگنال‌ها، schema، همه‌ی تنظیمات و همه‌ی بررسی‌ها - و
 [`example/`](https://github.com/amirAI-dot/django-httponly-jwt/blob/main/example/README.fa.md) همه‌اش را در حال کار دارد.
 
@@ -123,7 +124,8 @@ nox -s tests
 ترکیب `nox -s "tests(3.13-django6.1)"` است، و `nox -l` همه را فهرست می‌کند. `package`
 wheel را می‌سازد و تست‌ها و پروژه‌ی نمونه را روی آن اجرا می‌کند. `messages` رشته‌های
 علامت‌خورده را دوباره استخراج می‌کند و اگر کاتالوگ فارسی یکی را نداشته باشد شکست
-می‌خورد؛ gettext لازم دارد.
+می‌خورد؛ gettext لازم دارد. `docs` سایت مستندات را می‌سازد و با هر لینکی که نتواند دنبالش کند
+شکست می‌خورد؛ `nox -s docs -- serve` آن را هنگام نوشتن نشان می‌دهد.
 
 ## مجوز
 

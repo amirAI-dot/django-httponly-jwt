@@ -1,0 +1,142 @@
+# The documentation site - MkDocs with the Material theme, in English and in
+# Persian (right to left). A page is docs/<name>.md, and its Persian is
+# docs/<name>.fa.md beside it. Built by `nox -s docs`, published from main.
+
+site_name: django-httponly-jwt
+site_description: JWT sessions for Django in HttpOnly cookies, renewed by the server so quietly that the frontend never holds a token.
+site_url: https://amirai-dot.github.io/django-httponly-jwt/
+repo_url: https://github.com/amirAI-dot/django-httponly-jwt
+repo_name: amirAI-dot/django-httponly-jwt
+edit_uri: edit/main/docs/
+copyright: BSD 3-Clause licence
+
+theme:
+  name: material
+  language: en
+  features:
+    - content.code.copy
+    - content.tabs.link
+    - navigation.indexes
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - search.highlight
+    - search.suggest
+    - toc.follow
+  palette:
+    - media: '(prefers-color-scheme)'
+      toggle:
+        icon: material/brightness-auto
+        name: Follow the system
+    - media: '(prefers-color-scheme: light)'
+      scheme: default
+      primary: teal
+      toggle:
+        icon: material/brightness-7
+        name: Dark mode
+    - media: '(prefers-color-scheme: dark)'
+      scheme: slate
+      primary: teal
+      toggle:
+        icon: material/brightness-4
+        name: Light mode
+
+hooks:
+  - docs/hooks.py
+
+extra_css:
+  - stylesheets/extra.css
+
+plugins:
+  - search
+  - autorefs:
+      resolve_closest: true
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [src]
+          options:
+            show_source: false
+            show_root_heading: true
+            show_root_full_path: false
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            members_order: source
+            filters: ['!^_']
+            show_if_no_docstring: false
+            separate_signature: true
+            show_signature_annotations: true
+            signature_crossrefs: false
+            heading_level: 2
+            docstring_section_style: list
+            merge_init_into_class: true
+  - i18n:
+      docs_structure: suffix
+      reconfigure_material: true
+      languages:
+        - locale: en
+          name: English
+          default: true
+          build: true
+        - locale: fa
+          name: فارسی
+          build: true
+          theme:
+            language: fa
+          nav_translations:
+            Home: خانه
+            Getting started: شروع
+            Guide: راهنما
+            Reference: مرجع
+            Python API: API پایتون
+            Explanation: توضیح‌ها
+            Design: طراحی
+            Project: پروژه
+            Changelog: تغییرات
+
+nav:
+  - Home: index.md
+  - Getting started:
+      - getting-started/introduction.md
+      - getting-started/installation.md
+      - getting-started/quickstart.md
+  - Guide: guide.md
+  - Reference:
+      - reference/index.md
+      - Python API:
+          - reference/api/sessions.md
+          - reference/api/authentication.md
+          - reference/api/middleware.md
+          - reference/api/views.md
+          - reference/api/signals.md
+          - reference/api/cookies.md
+          - reference/api/schema.md
+  - Explanation:
+      - Design: design.md
+  - Project:
+      - Changelog: changelog.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets:
+      base_path: ['.']
+      check_paths: true
+
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn
