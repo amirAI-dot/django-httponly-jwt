@@ -4,6 +4,25 @@
 
 ## Unreleased
 
+Sessions (stage 4):
+
+* **`start_session(response, person)`** signs in a person the project has
+  identified its own way: a new pair, in both cookies.
+  **`issue_tokens(person)`** mints the pair and sets nothing, for a native
+  client.
+* **`REFRESH_LIFETIME`** - a function of the person: how long their session
+  lasts. **`CLAIMS`** - what both tokens carry about them, asked again at every
+  renewal, so a role changed today is in the next access token. A claim that
+  would overwrite simplejwt's own - who the token is for, its type, `jti`,
+  `exp`, `iat` - is refused.
+* **`RefreshView`** rotates: the token presented is blacklisted and a new pair
+  issued, so a refresh token can be used once. A browser gets `204` and
+  cookies, a native client the pair in the body. A refresh for somebody who
+  may not sign in is `401`, `session_ended`.
+* **`SignOutView`** blacklists the refresh token and clears both cookies - a
+  copy of the token elsewhere can no longer renew - and answers `204` whatever
+  it was given.
+
 Renewal (stage 3):
 
 * **`RenewalMiddleware`** renews an expired access token on the way through,

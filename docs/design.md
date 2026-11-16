@@ -211,6 +211,13 @@ send.
   cookies. A token that is unreadable or already blacklisted is not an error:
   the caller asked to be signed out, and they are.
 
+Both ask the cookie first and the body second, and answer the way the token
+came: from the cookie, `204` and cookies, never a token in a body; from the
+body, the pair in the body (`200`) and no cookie. A refresh that cannot be
+honoured is `401` with `code: session_ended`, and clears the cookies when the
+token came in one. A refresh issues a full new lifetime, so it also extends
+the session.
+
 Both are ordinary DRF views a project may subclass, throttle and mount where
 it likes.
 
@@ -232,6 +239,11 @@ HTTPONLY_JWT = {
     'CLAIMS': 'myproject.auth.claims',                        # (user) -> dict
 }
 ```
+
+`CLAIMS` is asked again at every renewal and every refresh, so a role changed
+today is in the next access token without signing anybody out. It may not set
+simplejwt's own claims - who the token is for, its type, `jti`, `exp`, `iat` -
+and one that tries is `ImproperlyConfigured`, not a token for somebody else.
 
 ## 10. CSRF, and the system checks
 

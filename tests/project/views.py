@@ -1,5 +1,6 @@
 """Pages that say who is asking - one for somebody signed in, two for anybody."""
 
+from django.contrib.auth.models import User
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -7,6 +8,7 @@ from rest_framework.views import APIView
 
 from httponly_jwt.authentication import OptionalAuthentication
 from httponly_jwt.cookies import clear_session_cookies, set_session_cookies
+from httponly_jwt.sessions import start_session
 
 
 def who(request: Request) -> Response:
@@ -57,3 +59,22 @@ class ClearsTheSessionItself(APIView):
 
     def get(self, request: Request) -> Response:
         return clear_session_cookies(Response({}))
+
+
+class SignIn(APIView):
+    """The project's own sign-in - here, a username and nothing else - and then the library's."""
+
+    permission_classes = (AllowAny,)
+
+    def post(self, request: Request) -> Response:
+        person = User.objects.get(username=request.data['username'])
+        return start_session(Response({'id': person.pk}), person)
+
+
+class Claims(APIView):
+    """What the access token this request was authenticated with carries."""
+
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request: Request) -> Response:
+        return Response(dict(request.auth.payload))  # type: ignore[union-attr]

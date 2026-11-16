@@ -11,7 +11,7 @@ never learns that tokens exist. This is the second.
 
 When the access cookie is missing or no longer good and the refresh cookie
 is, a new access token is minted, used for **this** request, and set on the
-way out. Four things it does that the obvious version does not:
+way out. Five things it does that the obvious version does not:
 
 * **It renews when the access cookie is gone, not only when it is expired.**
   The browser deletes an expired cookie, so the guard "nothing to renew
@@ -23,6 +23,8 @@ way out. Four things it does that the obvious version does not:
   renew together, one blacklisting the token the other is using, and the
   person would be signed out by their own second tab. Rotation is the
   refresh view's, called on purpose.
+* **It reads the claims again.** ``CLAIMS`` is asked about the person at
+  every renewal, so a role changed today is in the next access token.
 * **It leaves alone what a view decided.** A response that already sets or
   clears the session cookies - signing in, signing out - keeps them.
 
@@ -36,12 +38,9 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, Final
 
 from asgiref.sync import iscoroutinefunction, markcoroutinefunction, sync_to_async
-from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 from django.http.response import HttpResponseBase
-from django.utils.module_loading import import_string
 from rest_framework_simplejwt.exceptions import TokenError
-from rest_framework_simplejwt.settings import api_settings as simplejwt
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
 from httponly_jwt.conf import httponly_jwt_settings as conf
@@ -51,6 +50,7 @@ from httponly_jwt.cookies import (
     read_refresh_token,
     set_access_cookie,
 )
+from httponly_jwt.sessions import add_claims, may_sign_in, person_of
 
 logger = logging.getLogger(__name__)
 
@@ -113,27 +113,22 @@ def renew(request: HttpRequest) -> Outcome:
         # the cookies would make every later request repeat this work.
         return ENDED
 
-    person = _person_of(refresh)
+    person = person_of(refresh)
 
     if person is None or not may_sign_in(person):
         return ENDED
 
-    access = str(refresh.access_token)
+    token = refresh.access_token
+    # Claims are the project's answer now, not at sign-in: a role changed
+    # today is in the next access token, without signing anybody out.
+    add_claims(token, person)
+    access = str(token)
     # This request authenticates with it too. Without this line the renewal
     # only took effect from the next request, and every session would answer
     # one 401 per access-token lifetime.
     request.COOKIES[conf.access_cookie] = access
     logger.info('httponly_jwt.renewed', extra={'user_id': person.pk})
     return Renewed(access, _remaining(refresh))
-
-
-def may_sign_in(person: Any) -> bool:
-    """Whether ``person`` may still hold a session: active, and whatever the project adds."""
-    if not getattr(person, 'is_active', True):
-        return False
-
-    path = conf.value('USER_CAN_SIGN_IN')
-    return path is None or bool(import_string(path)(person))
 
 
 def settle(outcome: Outcome, response: HttpResponseBase) -> HttpResponseBase:
@@ -157,15 +152,6 @@ def _usable(raw_access: str) -> bool:
         return False
 
     return True
-
-
-def _person_of(refresh: RefreshToken) -> Any:
-    key = refresh.get(simplejwt.USER_ID_CLAIM)
-
-    if key is None:
-        return None
-
-    return get_user_model().objects.filter(**{simplejwt.USER_ID_FIELD: key}).first()
 
 
 def _remaining(refresh: RefreshToken) -> timedelta:
