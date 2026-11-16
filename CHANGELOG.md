@@ -2,6 +2,13 @@
 
 [فارسی](CHANGELOG.fa.md)
 
+## Unreleased
+
+* **The site's second half**: how-to guides - a Next.js frontend rendering on
+  the server, moving off tokens in `localStorage`, an audit trail, signing a
+  person out everywhere, testing a project that uses the library - questions,
+  and the project's pages: versions, security and contributing.
+
 ## 0.1.1 - a signed-out token stays signed out
 
 ### Security

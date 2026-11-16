@@ -49,8 +49,10 @@ REST_FRAMEWORK = {
 | [معرفی](getting-started/introduction.md) | چه چیزی با توکن در مرورگر خراب می‌شود، و این کتابخانه چه می‌کند |
 | [شروع سریع](getting-started/quickstart.md) | پروژه‌ای که در پنج دقیقه آدم‌ها را وارد می‌کند |
 | [راهنما](guide.md) | همه‌ی بخش‌ها، از ورود تا فرانت‌اندی روی سایت دیگر |
+| [راهنماهای کاربردی](how-to/index.md) | Next.js، مهاجرت از `localStorage`، سابقه، خروج از همه‌جا، تست |
 | [مرجع](reference/index.md) | تنظیمات، بررسی‌ها، سیگنال‌ها، و API پایتون |
 | [طراحی](design.md) | چرا این‌طور ساخته شده |
+| [پرسش‌ها](faq.md) | کوکی امن‌تر است؟ چرا `Lax`؟ چه هزینه‌ای دارد؟ |
 
 Django نسخه‌ی 5.2 تا 6.1، Python نسخه‌ی 3.11 تا 3.14، روی
 [djangorestframework-simplejwt](https://github.com/jazzband/djangorestframework-simplejwt).
