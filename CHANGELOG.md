@@ -2,7 +2,42 @@
 
 [فارسی](CHANGELOG.fa.md)
 
-## Unreleased
+## 0.1.1 - a signed-out token stays signed out
+
+### Security
+
+* **A refresh token that was blacklisted could work again after
+  `flushexpiredtokens`**, when `REFRESH_LIFETIME` gave a person a longer
+  session than simplejwt's `REFRESH_TOKEN_LIFETIME`. simplejwt writes a row for
+  every refresh token with the moment it expires, and the library set the
+  person's lifetime after the row was written, so the row kept the default.
+  simplejwt's `flushexpiredtokens` deletes the rows that have expired by that
+  moment, and the blacklist entries with them - and a token signed out or
+  rotated away, still good by its own signature, was accepted again. The row
+  now says what was issued: its expiry and its claims.
+
+  **Who is affected:** a project whose `REFRESH_LIFETIME` answers longer than
+  `REFRESH_TOKEN_LIFETIME` for somebody, and that runs `flushexpiredtokens`. A
+  shorter lifetime only kept a row longer than needed.
+
+  **Upgrading is not enough for the rows 0.1.0 already wrote.** Their true
+  expiry is not in them. Until the longest session given under 0.1.0 has run
+  out, either do not run `flushexpiredtokens`, or move every row's expiry to
+  the longest lifetime the project gives, once, from `manage.py shell`:
+
+```python
+from datetime import timedelta
+
+from django.db.models import F
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
+
+# The longest session REFRESH_LIFETIME gives anybody.
+LONGEST = timedelta(days=365)
+
+OutstandingToken.objects.update(expires_at=F('created_at') + LONGEST)
+```
+
+### Added
 
 * **The documentation site**, in English and Persian:
   [amirai-dot.github.io/django-httponly-jwt](https://amirai-dot.github.io/django-httponly-jwt/) -

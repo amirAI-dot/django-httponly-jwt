@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "django-httponly-jwt"
-version = "0.1.0"
+version = "0.1.1"
 description = "JWT sessions for Django in HttpOnly cookies, renewed by the server so quietly that the frontend never holds a token."
 readme = "README.md"
 license = "BSD-3-Clause"

@@ -29,6 +29,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any, TypeVar
 
+from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ImproperlyConfigured
 from django.http import HttpRequest
@@ -36,10 +37,13 @@ from django.http.response import HttpResponseBase
 from django.utils.module_loading import import_string
 from rest_framework_simplejwt.settings import api_settings as simplejwt
 from rest_framework_simplejwt.tokens import RefreshToken, Token
+from rest_framework_simplejwt.utils import datetime_from_epoch
 
 from httponly_jwt.conf import httponly_jwt_settings as conf
 from httponly_jwt.cookies import set_session_cookies
 from httponly_jwt.signals import session_started
+
+BLACKLIST_APP = 'rest_framework_simplejwt.token_blacklist'
 
 ResponseT = TypeVar('ResponseT', bound=HttpResponseBase)
 
@@ -87,7 +91,27 @@ def mint(person: Any) -> Tokens:
     lifetime = lifetime_for(person)
     refresh.set_exp(lifetime=lifetime)
     add_claims(refresh, person)
+    _record_as_issued(refresh)
     return Tokens(access=str(refresh.access_token), refresh=str(refresh), lifetime=lifetime)
+
+
+def _record_as_issued(refresh: RefreshToken) -> None:
+    """
+    Make simplejwt's row for ``refresh`` say what was issued.
+
+    ``for_user`` writes the row before the person's lifetime and claims are
+    set, so it holds simplejwt's default expiry. ``flushexpiredtokens``
+    deletes rows by that expiry, and the blacklist entry with them: a token
+    signed out and still good by its signature would work again.
+    """
+    if not apps.is_installed(BLACKLIST_APP):
+        return
+
+    from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
+
+    OutstandingToken.objects.filter(jti=refresh[simplejwt.JTI_CLAIM]).update(
+        token=str(refresh), expires_at=datetime_from_epoch(refresh['exp'])
+    )
 
 
 def lifetime_for(person: Any) -> timedelta:

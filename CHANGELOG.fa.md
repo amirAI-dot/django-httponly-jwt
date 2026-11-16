@@ -2,7 +2,41 @@
 
 [English](CHANGELOG.md)
 
-## منتشرنشده
+## 0.1.1 - توکنی که خارج شده خارج می‌ماند
+
+### امنیت
+
+* **توکن refreshی که blacklist شده بود می‌توانست بعد از `flushexpiredtokens` دوباره
+  کار کند**، وقتی `REFRESH_LIFETIME` به کسی نشستی طولانی‌تر از `REFRESH_TOKEN_LIFETIME`
+  در simplejwt می‌داد. simplejwt برای هر توکن refresh سطری با لحظه‌ی منقضی شدنش
+  می‌نویسد، و کتابخانه طول عمر شخص را بعد از نوشته شدن آن سطر می‌گذاشت، پس سطر همان
+  پیش‌فرض را نگه می‌داشت. `flushexpiredtokens` در simplejwt سطرهایی را که تا آن لحظه
+  منقضی شده‌اند پاک می‌کند، و ورودی‌های blacklist را همراهشان - و توکنی که خارج شده یا
+  چرخانده شده بود، و هنوز با امضای خودش معتبر بود، دوباره پذیرفته می‌شد. سطر حالا همان
+  چیزی را می‌گوید که داده شده: زمان انقضا و claimهایش.
+
+  **چه کسانی تحت تأثیرند:** پروژه‌ای که `REFRESH_LIFETIME` در آن برای کسی بیشتر از
+  `REFRESH_TOKEN_LIFETIME` جواب می‌دهد، و `flushexpiredtokens` را اجرا می‌کند. طول عمر
+  کوتاه‌تر فقط سطری را بیشتر از لازم نگه می‌داشت.
+
+  **به‌روزرسانی برای سطرهایی که 0.1.0 نوشته کافی نیست.** زمان انقضای واقعی در آن‌ها
+  نیست. تا وقتی طولانی‌ترین نشستی که زیر 0.1.0 داده شده تمام شود، یا
+  `flushexpiredtokens` را اجرا نکنید، یا زمان انقضای همه‌ی سطرها را یک بار، از
+  `manage.py shell`، به طولانی‌ترین طول عمری که پروژه می‌دهد ببرید:
+
+```python
+from datetime import timedelta
+
+from django.db.models import F
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
+
+# The longest session REFRESH_LIFETIME gives anybody.
+LONGEST = timedelta(days=365)
+
+OutstandingToken.objects.update(expires_at=F('created_at') + LONGEST)
+```
+
+### اضافه شده
 
 * **سایت مستندات**، به انگلیسی و فارسی:
   [amirai-dot.github.io/django-httponly-jwt](https://amirai-dot.github.io/django-httponly-jwt/fa/) -
