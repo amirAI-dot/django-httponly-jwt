@@ -55,7 +55,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from httponly_jwt.cookies import clear_session_cookies, read_refresh_token, set_session_cookies
 from httponly_jwt.csrf import enforce_csrf
-from httponly_jwt.sessions import issue_tokens, may_sign_in, person_of
+from httponly_jwt.sessions import may_sign_in, mint, person_of
+from httponly_jwt.signals import Ended, session_ended, session_refreshed
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +77,12 @@ class RefreshView(APIView):
         person = None if refresh is None else person_of(refresh)
 
         if refresh is None or person is None or not may_sign_in(person):
+            session_ended.send(
+                sender=type(self),
+                person=person,
+                request=request,
+                reason=Ended.TOKEN_UNUSABLE if refresh is None else Ended.NOT_ALLOWED,
+            )
             answer = Response(
                 {
                     'detail': _('Your session has ended. Please sign in again.'),
@@ -86,8 +93,9 @@ class RefreshView(APIView):
             return clear_session_cookies(answer) if from_cookie else answer
 
         blacklist(refresh)
-        tokens = issue_tokens(person)
+        tokens = mint(person)
         logger.info('httponly_jwt.refreshed', extra={'user_id': person.pk})
+        session_refreshed.send(sender=type(self), person=person, request=request)
 
         if from_cookie:
             return set_session_cookies(
@@ -118,6 +126,12 @@ class SignOutView(APIView):
             blacklist(refresh)
             logger.info(
                 'httponly_jwt.signed_out', extra={'user_id': refresh.get(simplejwt.USER_ID_CLAIM)}
+            )
+            session_ended.send(
+                sender=type(self),
+                person=person_of(refresh),
+                request=request,
+                reason=Ended.SIGNED_OUT,
             )
 
         return clear_session_cookies(Response(status=status.HTTP_204_NO_CONTENT))

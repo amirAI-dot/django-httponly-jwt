@@ -7,6 +7,7 @@ Every check the project runs, defined once - locally and in CI alike.
     nox -s tests                             every supported Python and Django
     nox -s "tests(3.13-django6.1)"           one combination
     nox -s package                           the built wheel installs, and the suite runs on it
+    nox -s messages                          the Persian catalogue holds every marked string
 
 CI runs these same sessions, built from the same table, so a check that
 passes here passes there and a supported version cannot be left out of one.
@@ -65,6 +66,43 @@ def tests(session: nox.Session, django: str) -> None:
     """The suite, against one Python and one Django release, with 100% coverage."""
     session.install('-e', '.', '--group', 'test', django_release(django))
     session.run('pytest', '--cov', '--cov-report=term', *session.posargs)
+
+
+@nox.session(python=NEWEST_PYTHON)
+def messages(session: nox.Session) -> None:
+    """
+    The catalogue holds every string the library marks, and nothing it no
+    longer marks: the strings are extracted again, and git finds no change.
+
+    Needs gettext installed. After marking a string, run this, translate what
+    it added, and compile: ``django-admin compilemessages`` in ``src/httponly_jwt``.
+    """
+    session.install('-e', '.', '--group', 'test', django_release(NEWEST_DJANGO))
+    root = os.getcwd()
+
+    with session.chdir('src/httponly_jwt'):
+        session.run(
+            'python',
+            '-m',
+            'django',
+            'makemessages',
+            '--locale=fa',
+            '--no-location',
+            '--no-obsolete',
+            '--ignore=__pycache__',
+            '--settings=tests.project.settings',
+            env={'PYTHONPATH': root},
+        )
+
+    session.run(
+        'git',
+        'diff',
+        '--exit-code',
+        '--ignore-matching-lines=POT-Creation-Date',
+        '--',
+        '*.po',
+        external=True,
+    )
 
 
 @nox.session(python=NEWEST_PYTHON)

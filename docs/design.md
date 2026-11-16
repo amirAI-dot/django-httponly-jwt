@@ -113,7 +113,7 @@ from httponly_jwt.sessions import start_session
 class SignInView(APIView):
     def post(self, request):
         user = verify_code(request.data['phone'], request.data['code'])   # the project's
-        return start_session(Response({'id': user.pk}), user)
+        return start_session(Response({'id': user.pk}), user, request=request)
 ```
 
 ```python
@@ -288,6 +288,17 @@ Sent after the response is decided, each with the person and the request:
 `session_started`, `session_renewed`, `session_refreshed` (rotation),
 `session_ended` (signed out, or ended by the middleware - with the reason).
 For a project's audit trail.
+
+- `reason` is an `Ended`: `signed_out`, `token_unusable` (expired,
+  blacklisted, unreadable) or `not_allowed` (gone, switched off, or refused
+  by `USER_CAN_SIGN_IN`). `person` is `None` when the token named nobody the
+  library could load.
+- A renewal a view overruled - it set or cleared the session itself - is not
+  sent: what is told is what reached the response.
+- Under ASGI the middleware sends with `asend`, so a receiver that writes an
+  audit row runs where it may.
+- `start_session` and `issue_tokens` take the request as `request=`, to pass
+  it on.
 
 ## 12. Settings
 

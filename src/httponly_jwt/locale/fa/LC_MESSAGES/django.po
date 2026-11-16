@@ -1,0 +1,77 @@
+# Persian translation of django-httponly-jwt.
+# This file is distributed under the same licence as django-httponly-jwt.
+msgid ""
+msgstr ""
+"Project-Id-Version: django-httponly-jwt\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-16 03:54-0600\n"
+"Last-Translator: amir mohammad kashanchian\n"
+"Language-Team: Persian\n"
+"Language: fa\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid ""
+"The access token, in an HttpOnly cookie the browser sends by itself. Signing "
+"in sets it; the server renews it on the way through."
+msgstr ""
+"توکن access، در یک کوکی HttpOnly که مرورگر خودش می‌فرستد. ورود آن را می‌گذارد؛ "
+"سرور سر راه تمدیدش می‌کند."
+
+msgid "A browser's refresh token. Read before the body."
+msgstr "توکن refresh مرورگر. پیش از بدنه خوانده می‌شود."
+
+msgid "A native client's refresh token, when there is no cookie."
+msgstr "توکن refresh کلاینت موبایل، وقتی کوکی‌ای نیست."
+
+msgid "Refresh the session"
+msgstr "تمدید نشست"
+
+msgid ""
+"The refresh token presented is blacklisted and a new pair issued, with the "
+"person's claims and lifetime read again. A browser gets both cookies and no "
+"token in the body; a native client the pair in the body."
+msgstr ""
+"توکن refresh ارائه‌شده blacklist می‌شود و جفت تازه‌ای داده می‌شود، با claimها و "
+"طول عمر شخص که دوباره خوانده می‌شوند. مرورگر هر دو کوکی را می‌گیرد و هیچ توکنی "
+"در بدنه نیست؛ کلاینت موبایل جفت را در بدنه."
+
+msgid "A native client: the new pair."
+msgstr "کلاینت موبایل: جفت تازه."
+
+msgid "A browser: both cookies set again."
+msgstr "مرورگر: هر دو کوکی دوباره گذاشته شد."
+
+msgid "The session has ended: sign in again."
+msgstr "نشست تمام شده: دوباره وارد شوید."
+
+msgid "The CSRF check is on, and failed."
+msgstr "بررسی CSRF روشن است، و رد شد."
+
+msgid "Sign out"
+msgstr "خروج"
+
+msgid ""
+"The refresh token presented is blacklisted, so no copy of it renews "
+"anywhere, and both cookies are cleared. Answers 204 whatever it was given."
+msgstr ""
+"توکن refresh ارائه‌شده blacklist می‌شود، پس هیچ نسخه‌ای از آن جایی تمدید "
+"نمی‌کند، و هر دو کوکی پاک می‌شوند. هر چه به آن داده شود 204 جواب می‌دهد."
+
+msgid "Signed out."
+msgstr "خارج شدید."
+
+msgid "The CSRF token"
+msgstr "توکن CSRF"
+
+msgid ""
+"For a frontend on another site, which cannot read the API's cookie. Send it "
+"back in X-CSRFToken on every write."
+msgstr ""
+"برای فرانت‌اندی روی سایت دیگر، که نمی‌تواند کوکی API را بخواند. در هر نوشتن آن "
+"را در X-CSRFToken برگردانید."
+
+msgid "Your session has ended. Please sign in again."
+msgstr "نشست شما تمام شده. لطفاً دوباره وارد شوید."

@@ -34,10 +34,12 @@ elsewhere - and loading the person.
 """
 
 import logging
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from typing import Any, Final
+from typing import Any
 
 from asgiref.sync import iscoroutinefunction, markcoroutinefunction, sync_to_async
+from django.dispatch import Signal
 from django.http import HttpRequest
 from django.http.response import HttpResponseBase
 from rest_framework_simplejwt.exceptions import TokenError
@@ -51,22 +53,29 @@ from httponly_jwt.cookies import (
     set_access_cookie,
 )
 from httponly_jwt.sessions import add_claims, may_sign_in, person_of
+from httponly_jwt.signals import Ended, session_ended, session_renewed
 
 logger = logging.getLogger(__name__)
 
-#: The session is over: clear both cookies on the way out.
-ENDED: Final = 'ended'
 
-
+@dataclass(frozen=True)
 class Renewed:
-    """A new access token, and how long its cookie may last."""
+    """A new access token for ``person``, and how long its cookie may last."""
 
-    def __init__(self, access: str, lifetime: timedelta) -> None:
-        self.access = access
-        self.lifetime = lifetime
+    access: str
+    lifetime: timedelta
+    person: Any
 
 
-Outcome = Renewed | str | None
+@dataclass(frozen=True)
+class Over:
+    """The session is over: clear both cookies on the way out."""
+
+    reason: Ended
+    person: Any = None
+
+
+Outcome = Renewed | Over | None
 
 
 class RenewalMiddleware:
@@ -86,16 +95,28 @@ class RenewalMiddleware:
             return self.__acall__(request)
 
         outcome = renew(request)
-        return settle(outcome, self.get_response(request))
+        response = self.get_response(request)
+
+        if (reached := settle(outcome, response)) is not None:
+            signal, extra = announcement(reached)
+            signal.send(sender=type(self), request=request, **extra)
+
+        return response
 
     async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
         outcome = await sync_to_async(renew, thread_sensitive=True)(request)
-        return settle(outcome, await self.get_response(request))
+        response: HttpResponseBase = await self.get_response(request)
+
+        if (reached := settle(outcome, response)) is not None:
+            signal, extra = announcement(reached)
+            await signal.asend(sender=type(self), request=request, **extra)
+
+        return response
 
 
 def renew(request: HttpRequest) -> Outcome:
     """
-    What this request's session needs: a new access token, ``ENDED``, or nothing.
+    What this request's session needs: a new access token, to be cleared, or nothing.
 
     Nothing when there is no refresh cookie - a client signed in by header
     never had one, and clearing would delete cookies it never set - or when
@@ -111,12 +132,12 @@ def renew(request: HttpRequest) -> Outcome:
     except TokenError:
         # Expired, unreadable, or blacklisted - signed out elsewhere. Leaving
         # the cookies would make every later request repeat this work.
-        return ENDED
+        return Over(Ended.TOKEN_UNUSABLE)
 
     person = person_of(refresh)
 
     if person is None or not may_sign_in(person):
-        return ENDED
+        return Over(Ended.NOT_ALLOWED, person)
 
     token = refresh.access_token
     # Claims are the project's answer now, not at sign-in: a role changed
@@ -128,18 +149,32 @@ def renew(request: HttpRequest) -> Outcome:
     # one 401 per access-token lifetime.
     request.COOKIES[conf.access_cookie] = access
     logger.info('httponly_jwt.renewed', extra={'user_id': person.pk})
-    return Renewed(access, _remaining(refresh))
+    return Renewed(access, _remaining(refresh), person)
 
 
-def settle(outcome: Outcome, response: HttpResponseBase) -> HttpResponseBase:
-    """Put the renewal on ``response`` - unless the view already set the session itself."""
+def settle(outcome: Outcome, response: HttpResponseBase) -> Renewed | Over | None:
+    """
+    Put the outcome on ``response`` - unless the view already set the session itself.
+
+    Answers the outcome that reached the response, or ``None`` when nothing did.
+    """
     if outcome is None or _decided_by_view(response):
-        return response
+        return None
 
     if isinstance(outcome, Renewed):
-        return set_access_cookie(response, outcome.access, lifetime=outcome.lifetime)
+        set_access_cookie(response, outcome.access, lifetime=outcome.lifetime)
+    else:
+        clear_session_cookies(response)
 
-    return clear_session_cookies(response)
+    return outcome
+
+
+def announcement(outcome: Renewed | Over) -> tuple[Signal, dict[str, Any]]:
+    """The signal an outcome that reached the response is told by, and what it carries."""
+    if isinstance(outcome, Renewed):
+        return session_renewed, {'person': outcome.person}
+
+    return session_ended, {'person': outcome.person, 'reason': outcome.reason}
 
 
 def _usable(raw_access: str) -> bool:

@@ -38,6 +38,10 @@ classifiers = [
     "Typing :: Typed",
 ]
 
+[project.optional-dependencies]
+# Describes the cookie, the header and the session views in a drf-spectacular schema.
+spectacular = ["drf-spectacular>=0.28"]
+
 [project.urls]
 Repository = "https://github.com/amirAI-dot/django-httponly-jwt"
 Changelog = "https://github.com/amirAI-dot/django-httponly-jwt/blob/main/CHANGELOG.md"
@@ -48,12 +52,14 @@ test = [
     "pytest>=9",
     "pytest-django>=4.11",
     "pytest-cov>=7",
+    "drf-spectacular>=0.28",
 ]
 lint = ["ruff>=0.15"]
 types = [
     "mypy>=1.15",
     "django-stubs>=5.2",
     "djangorestframework-stubs>=3.16",
+    "drf-spectacular>=0.28",
 ]
 dev = [
     "nox>=2025.2.9",
@@ -135,3 +141,8 @@ plugins = ["mypy_django_plugin.main"]
 
 [tool.django-stubs]
 django_settings_module = "tests.project.settings"
+
+[[tool.mypy.overrides]]
+# drf-spectacular's extension base classes are only partly annotated.
+module = "httponly_jwt.schema"
+disallow_untyped_calls = false

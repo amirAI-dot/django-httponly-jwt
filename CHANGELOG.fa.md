@@ -4,6 +4,22 @@
 
 ## منتشرنشده
 
+پیرامون آن (مرحله‌ی ۶):
+
+* **سیگنال‌ها** - `session_started`، `session_renewed`، `session_refreshed` و
+  `session_ended`، هر کدام با شخص و درخواست، برای سابقه‌ای که خود پروژه نگه می‌دارد.
+  `session_ended` یک `reason` دارد، از نوع `Ended`: `signed_out`، `token_unusable`
+  یا `not_allowed`. تمدیدی که یک view کنارش گذاشت فرستاده نمی‌شود. زیر ASGI،
+  middleware با `asend` می‌فرستد. `start_session` و `issue_tokens` درخواست را با
+  `request=` می‌گیرند تا آن را برسانند.
+* **drf-spectacular**، با extraی `spectacular`: کوکی یک scheme از نوع `apiKey` با
+  همان نامی است که پروژه انتخاب کرده، هدر همان `jwtAuth` در simplejwt، و کلاس
+  اختیاری هر کدام از این دو؛ viewهای تمدید، خروج و توکن CSRF می‌گویند چه می‌خوانند
+  و چه جواب می‌دهند. فقط وقتی drf-spectacular نصب است بار می‌شود، و بدون هیچ
+  هشداری توصیف می‌شود.
+* **فارسی** - کاتالوگ در `httponly_jwt/locale/fa`، کامپایل‌شده و همراه بسته؛
+  `nox -s messages` وقتی رشته‌ی علامت‌خورده‌ای در آن نباشد شکست می‌خورد.
+
 CSRF (مرحله‌ی ۵):
 
 * **`CSRF = True`**، برای فرانت‌اندی روی سایت دیگر با `SameSite=None`: درخواست

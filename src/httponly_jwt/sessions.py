@@ -31,6 +31,7 @@ from typing import Any, TypeVar
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ImproperlyConfigured
+from django.http import HttpRequest
 from django.http.response import HttpResponseBase
 from django.utils.module_loading import import_string
 from rest_framework_simplejwt.settings import api_settings as simplejwt
@@ -38,6 +39,7 @@ from rest_framework_simplejwt.tokens import RefreshToken, Token
 
 from httponly_jwt.conf import httponly_jwt_settings as conf
 from httponly_jwt.cookies import set_session_cookies
+from httponly_jwt.signals import session_started
 
 ResponseT = TypeVar('ResponseT', bound=HttpResponseBase)
 
@@ -52,21 +54,40 @@ class Tokens:
     lifetime: timedelta
 
 
-def issue_tokens(person: Any) -> Tokens:
-    """A new pair for ``person``, with their claims and their lifetime; nothing is set."""
+def issue_tokens(person: Any, *, request: HttpRequest | None = None) -> Tokens:
+    """
+    Sign ``person`` in for a native client: a new pair, and nothing set.
+
+    ``request``, when given, travels with ``session_started``.
+    """
+    tokens = mint(person)
+    session_started.send(sender=issue_tokens, person=person, request=request)
+    return tokens
+
+
+def start_session(
+    response: ResponseT, person: Any, *, request: HttpRequest | None = None
+) -> ResponseT:
+    """
+    Sign ``person`` in on ``response``: a new pair, in both cookies.
+
+    ``request``, when given, travels with ``session_started``.
+    """
+    tokens = mint(person)
+    set_session_cookies(
+        response, access=tokens.access, refresh=tokens.refresh, lifetime=tokens.lifetime
+    )
+    session_started.send(sender=start_session, person=person, request=request)
+    return response
+
+
+def mint(person: Any) -> Tokens:
+    """A new pair for ``person``, with their claims and their lifetime - and no signal."""
     refresh = RefreshToken.for_user(person)
     lifetime = lifetime_for(person)
     refresh.set_exp(lifetime=lifetime)
     add_claims(refresh, person)
     return Tokens(access=str(refresh.access_token), refresh=str(refresh), lifetime=lifetime)
-
-
-def start_session(response: ResponseT, person: Any) -> ResponseT:
-    """Sign ``person`` in on ``response``: a new pair, in both cookies."""
-    tokens = issue_tokens(person)
-    return set_session_cookies(
-        response, access=tokens.access, refresh=tokens.refresh, lifetime=tokens.lifetime
-    )
 
 
 def lifetime_for(person: Any) -> timedelta:

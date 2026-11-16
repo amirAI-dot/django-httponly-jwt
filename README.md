@@ -31,7 +31,9 @@ nox -s tests
 
 `tests` runs every supported Python and Django, with 100% coverage; one
 combination is `nox -s "tests(3.13-django6.1)"`, and `nox -l` lists them all.
-`package` builds the wheel and runs the suite against it.
+`package` builds the wheel and runs the suite against it. `messages` extracts
+the marked strings again and fails if the Persian catalogue is missing one; it
+needs gettext.
 
 ## Licence
 
