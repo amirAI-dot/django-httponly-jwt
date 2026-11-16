@@ -6,7 +6,7 @@ Every check the project runs, defined once - locally and in CI alike.
     nox -s types                             mypy
     nox -s tests                             every supported Python and Django
     nox -s "tests(3.13-django6.1)"           one combination
-    nox -s package                           the built wheel installs, and the suite runs on it
+    nox -s package                           the wheel installs; the suite and example run on it
     nox -s messages                          the Persian catalogue holds every marked string
 
 CI runs these same sessions, built from the same table, so a check that
@@ -109,8 +109,8 @@ def messages(session: nox.Session) -> None:
 def package(session: nox.Session) -> None:
     """
     What is published works: the wheel is built and installed alone - not the
-    source tree - and the suite runs against it, so a file left out of the
-    package fails here.
+    source tree - and the suite and the example project run against it, so a
+    file left out of the package fails here.
     """
     session.install('build')
     out = session.create_tmp()
@@ -122,3 +122,6 @@ def package(session: nox.Session) -> None:
     installed = 'import httponly_jwt, sys; sys.exit("site-packages" not in httponly_jwt.__file__)'
     session.run('python', '-c', installed)
     session.run('pytest', '-p', 'no:cacheprovider')
+
+    with session.chdir('example'):
+        session.run('python', 'manage.py', 'test', '--noinput')
