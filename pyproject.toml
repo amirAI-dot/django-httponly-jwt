@@ -1,0 +1,137 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "django-httponly-jwt"
+version = "0.1.0.dev0"
+description = "JWT sessions for Django in HttpOnly cookies, renewed by the server so quietly that the frontend never holds a token."
+readme = "README.md"
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
+authors = [{ name = "amir mohammad kashanchian" }]
+requires-python = ">=3.11"
+dependencies = [
+    "Django>=5.2",
+    "djangorestframework>=3.16",
+    "djangorestframework-simplejwt>=5.5",
+]
+keywords = ["django", "jwt", "httponly", "cookie", "authentication", "django-rest-framework", "simplejwt"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Environment :: Web Environment",
+    "Framework :: Django",
+    "Framework :: Django :: 5.2",
+    "Framework :: Django :: 6.0",
+    "Framework :: Django :: 6.1",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Internet :: WWW/HTTP :: Session",
+    "Topic :: Security",
+    "Typing :: Typed",
+]
+
+[project.urls]
+Repository = "https://github.com/amirAI-dot/django-httponly-jwt"
+Changelog = "https://github.com/amirAI-dot/django-httponly-jwt/blob/main/CHANGELOG.md"
+Design = "https://github.com/amirAI-dot/django-httponly-jwt/blob/main/docs/design.md"
+
+[dependency-groups]
+test = [
+    "pytest>=9",
+    "pytest-django>=4.11",
+    "pytest-cov>=7",
+]
+lint = ["ruff>=0.15"]
+types = [
+    "mypy>=1.15",
+    "django-stubs>=5.2",
+    "djangorestframework-stubs>=3.16",
+]
+dev = [
+    "nox>=2025.2.9",
+    { include-group = "test" },
+    { include-group = "lint" },
+    { include-group = "types" },
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/httponly_jwt"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src", "tests", "docs", "LICENSE", "README.md", "CHANGELOG.md", "CHANGELOG.fa.md"]
+
+# ---------------------------------------------------------------- tests
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "tests.project.settings"
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = ["--strict-markers", "--strict-config", "-ra"]
+xfail_strict = true
+filterwarnings = ["error"]
+
+[tool.coverage.run]
+source = ["httponly_jwt"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+# Every line of the library is run by a test: a line no test runs fails the suite.
+fail_under = 100
+
+# ---------------------------------------------------------------- lint
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+# The documents' examples are prose, laid out for reading rather than formatted.
+extend-exclude = ["docs/*.md"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes
+    "I",        # import order
+    "N",        # naming
+    "UP",       # newer syntax for the oldest supported Python
+    "B",        # likely bugs
+    "C4",       # comprehensions
+    "SIM",      # simplifications
+    "RET",      # return statements
+    "PIE",      # unnecessary statements
+    "PT",       # pytest style
+    "DJ",       # Django conventions
+    "RUF",      # ruff's own rules
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Written by makemigrations, not by hand: plain lists, and lines as long as they come.
+"**/migrations/*.py" = ["RUF012", "E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["httponly_jwt", "tests"]
+
+[tool.ruff.format]
+quote-style = "single"
+
+# ---------------------------------------------------------------- types
+
+[tool.mypy]
+python_version = "3.11"
+files = ["src"]
+strict = true
+plugins = ["mypy_django_plugin.main"]
+
+
+[tool.django-stubs]
+django_settings_module = "tests.project.settings"
