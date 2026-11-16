@@ -2,7 +2,20 @@
 
 [فارسی](CHANGELOG.fa.md)
 
-## Unreleased
+## 0.1.0 - the first release
+
+JWT sessions in HttpOnly cookies, renewed by the server on the way through:
+everything in the [design](docs/design.md), built stage by stage.
+
+The release (stage 7):
+
+* **The guide** ([`docs/guide.md`](docs/guide.md), and in Persian) - every
+  part, from setting it up to the frontend, a frontend on another site, apps,
+  signals, the schema, every setting and every check.
+* **An example project** ([`example/`](example/README.md)) - signing in by a
+  one-time code, each person's session, an audit trail from the signals; its
+  tests run against the built wheel in `nox -s package`.
+* Published to PyPI from a GitHub release, by Trusted Publishing.
 
 Around it (stage 6):
 
